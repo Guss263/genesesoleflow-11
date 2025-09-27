@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Pencil, Trash2 } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -22,14 +23,48 @@ const AdminDashboard = () => {
     category: ""
   });
   const [images, setImages] = useState<FileList | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated as admin
     const isAdmin = localStorage.getItem("isAdmin");
     if (!isAdmin) {
       navigate("/admin-login");
+    } else {
+      fetchProducts();
     }
   }, [navigate]);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar produtos: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar produtos.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const collections = [
     { value: "masculino", label: "Masculino" },
@@ -67,30 +102,40 @@ const AdminDashboard = () => {
       // Convert sizes string to array
       const sizesArray = formData.sizes.split(',').map(size => size.trim()).filter(size => size.length > 0);
 
-      // Insert product into Supabase
-      const { data, error } = await supabase
-        .from('products')
-        .insert([
-          {
-            name: formData.name,
-            brand: formData.brand || "GeneBrand",
-            price: parseFloat(formData.price),
-            image_url: "/placeholder.svg", // Placeholder for now
-            rating: 4.5,
-            is_new: true,
-            is_sale: false,
-            category: formData.category,
-            gender: formData.collection,
-            description: formData.description,
-            sizes: sizesArray
-          }
-        ])
-        .select();
+      const productData = {
+        name: formData.name,
+        brand: formData.brand || "GeneBrand",
+        price: parseFloat(formData.price),
+        image_url: "/placeholder.svg", // Placeholder for now
+        rating: 4.5,
+        is_new: true,
+        is_sale: false,
+        category: formData.category,
+        gender: formData.collection,
+        description: formData.description,
+        sizes: sizesArray
+      };
 
-      if (error) {
+      let result;
+      if (editingProductId) {
+        // Update existing product
+        result = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', editingProductId)
+          .select();
+      } else {
+        // Insert new product
+        result = await supabase
+          .from('products')
+          .insert([productData])
+          .select();
+      }
+
+      if (result.error) {
         toast({
           title: "Erro",
-          description: "Erro ao salvar produto: " + error.message,
+          description: `Erro ao ${editingProductId ? 'atualizar' : 'salvar'} produto: ` + result.error.message,
           variant: "destructive"
         });
         return;
@@ -98,29 +143,88 @@ const AdminDashboard = () => {
 
       toast({
         title: "Sucesso!",
-        description: "Produto adicionado com sucesso.",
+        description: editingProductId ? "Produto atualizado com sucesso." : "Produto adicionado com sucesso.",
       });
 
-      // Clear form
-      setFormData({
-        name: "",
-        description: "",
-        sizes: "",
-        collection: "",
-        brand: "",
-        price: "",
-        category: ""
-      });
-      setImages(null);
-      
-      // Reset file input
-      const fileInput = document.getElementById("images") as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
+      // Clear form and reset editing state
+      clearForm();
+      // Refresh products list
+      fetchProducts();
       
     } catch (error) {
       toast({
         title: "Erro",
         description: "Erro inesperado ao salvar produto.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const clearForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      sizes: "",
+      collection: "",
+      brand: "",
+      price: "",
+      category: ""
+    });
+    setImages(null);
+    setEditingProductId(null);
+    
+    // Reset file input
+    const fileInput = document.getElementById("images") as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  };
+
+  const handleEditProduct = (product: any) => {
+    setFormData({
+      name: product.name,
+      description: product.description || "",
+      sizes: product.sizes ? product.sizes.join(', ') : "",
+      collection: product.gender,
+      brand: product.brand || "",
+      price: product.price.toString(),
+      category: product.category
+    });
+    setEditingProductId(product.id);
+    
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    const confirmed = window.confirm("Você tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.");
+    
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao excluir produto: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Produto excluído com sucesso.",
+      });
+
+      // Refresh products list
+      fetchProducts();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao excluir produto.",
         variant: "destructive"
       });
     }
@@ -245,10 +349,72 @@ const AdminDashboard = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full hero-button">
-                Salvar Produto
-              </Button>
+              <div className="flex gap-4">
+                <Button type="submit" className="flex-1 hero-button">
+                  {editingProductId ? "Atualizar Produto" : "Salvar Produto"}
+                </Button>
+                {editingProductId && (
+                  <Button type="button" variant="outline" onClick={clearForm} className="flex-1">
+                    Cancelar
+                  </Button>
+                )}
+              </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Products List Section */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Produtos Cadastrados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <p>Carregando produtos...</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum produto cadastrado ainda.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {products.map((product) => (
+                  <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <img 
+                      src={product.image_url || "/placeholder.svg"} 
+                      alt={product.name}
+                      className="w-16 h-16 object-cover rounded-md"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Coleção: {product.gender} | Categoria: {product.category}
+                      </p>
+                      <p className="text-sm font-medium">R$ {product.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditProduct(product)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
