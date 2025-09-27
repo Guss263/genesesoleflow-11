@@ -1,9 +1,70 @@
 import ProductCard from "./ProductCard";
 import { Link } from "react-router-dom";
-import { getFeaturedProducts } from "@/data/products";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ProductCardProps {
+  id: string;
+  name: string;
+  brand: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  rating: number;
+  isNew?: boolean;
+  isSale?: boolean;
+}
 
 const ProductGrid = () => {
-  const featuredProducts = getFeaturedProducts();
+  const [featuredProducts, setFeaturedProducts] = useState<ProductCardProps[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .limit(4);
+        
+        if (error) {
+          console.error('Error fetching products:', error);
+          return;
+        }
+        
+        // Transform data to match ProductCard props
+        const transformedProducts: ProductCardProps[] = data?.map(product => ({
+          id: product.id,
+          name: product.name,
+          brand: product.brand,
+          price: Number(product.price),
+          originalPrice: product.original_price ? Number(product.original_price) : undefined,
+          image: product.image_url || "/placeholder.svg",
+          rating: Number(product.rating),
+          isNew: product.is_new,
+          isSale: product.is_sale
+        })) || [];
+        
+        setFeaturedProducts(transformedProducts);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="container text-center">
+          <p>Carregando produtos...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16">

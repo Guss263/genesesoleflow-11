@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Product } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     }));
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.collection || !formData.category || !formData.price) {
@@ -63,50 +63,67 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Create new product object
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      name: formData.name,
-      brand: formData.brand || "GeneBrand",
-      price: parseFloat(formData.price),
-      image: "/placeholder.svg", // Placeholder for now
-      rating: 4.5,
-      isNew: true,
-      isSale: false,
-      category: formData.category as Product['category'],
-      gender: formData.collection as Product['gender'],
-      description: formData.description
-    };
+    try {
+      // Convert sizes string to array
+      const sizesArray = formData.sizes.split(',').map(size => size.trim()).filter(size => size.length > 0);
 
-    // Get existing products from localStorage
-    const existingProducts = JSON.parse(localStorage.getItem("customProducts") || "[]");
-    
-    // Add new product
-    const updatedProducts = [...existingProducts, newProduct];
-    
-    // Save to localStorage
-    localStorage.setItem("customProducts", JSON.stringify(updatedProducts));
+      // Insert product into Supabase
+      const { data, error } = await supabase
+        .from('products')
+        .insert([
+          {
+            name: formData.name,
+            brand: formData.brand || "GeneBrand",
+            price: parseFloat(formData.price),
+            image_url: "/placeholder.svg", // Placeholder for now
+            rating: 4.5,
+            is_new: true,
+            is_sale: false,
+            category: formData.category,
+            gender: formData.collection,
+            description: formData.description,
+            sizes: sizesArray
+          }
+        ])
+        .select();
 
-    toast({
-      title: "Sucesso!",
-      description: "Produto adicionado com sucesso.",
-    });
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar produto: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
 
-    // Clear form
-    setFormData({
-      name: "",
-      description: "",
-      sizes: "",
-      collection: "",
-      brand: "",
-      price: "",
-      category: ""
-    });
-    setImages(null);
-    
-    // Reset file input
-    const fileInput = document.getElementById("images") as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
+      toast({
+        title: "Sucesso!",
+        description: "Produto adicionado com sucesso.",
+      });
+
+      // Clear form
+      setFormData({
+        name: "",
+        description: "",
+        sizes: "",
+        collection: "",
+        brand: "",
+        price: "",
+        category: ""
+      });
+      setImages(null);
+      
+      // Reset file input
+      const fileInput = document.getElementById("images") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+      
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao salvar produto.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleLogout = () => {
