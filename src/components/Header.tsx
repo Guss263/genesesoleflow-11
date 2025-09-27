@@ -19,9 +19,6 @@ const Header = () => {
     label: "Infantil",
     href: "/infantil"
   }, {
-    label: "Marcas",
-    href: "#"
-  }, {
     label: "Lançamentos",
     href: "/new-releases"
   }, {
