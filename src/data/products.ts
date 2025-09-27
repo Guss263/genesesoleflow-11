@@ -182,18 +182,34 @@ export const allProducts: Product[] = [
   }
 ];
 
+// Function to get custom products from localStorage
+export const getCustomProducts = (): Product[] => {
+  if (typeof window === 'undefined') return [];
+  const customProducts = localStorage.getItem("customProducts");
+  return customProducts ? JSON.parse(customProducts) : [];
+};
+
+// Function to get all products (original + custom)
+export const getAllProducts = (): Product[] => {
+  return [...allProducts, ...getCustomProducts()];
+};
+
 export const getProductsByCategory = (category: string) => {
-  return allProducts.filter(product => product.category === category);
+  const allProductsList = getAllProducts();
+  return allProductsList.filter(product => product.category === category);
 };
 
 export const getProductsByGender = (gender: string) => {
-  return allProducts.filter(product => product.gender === gender);
+  const allProductsList = getAllProducts();
+  return allProductsList.filter(product => product.gender === gender);
 };
 
 export const getNewProducts = () => {
-  return allProducts.filter(product => product.isNew);
+  const allProductsList = getAllProducts();
+  return allProductsList.filter(product => product.isNew);
 };
 
 export const getFeaturedProducts = () => {
-  return allProducts.slice(0, 4);
+  const allProductsList = getAllProducts();
+  return allProductsList.slice(0, 4);
 };
