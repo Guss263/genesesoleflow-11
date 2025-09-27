@@ -99,6 +99,36 @@ const AdminDashboard = () => {
     }
 
     try {
+      let imageUrl = "/placeholder.svg";
+
+      // Upload image if one is selected
+      if (images && images.length > 0) {
+        const file = images[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          toast({
+            title: "Erro no upload",
+            description: "Erro ao fazer upload da imagem: " + uploadError.message,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = urlData.publicUrl;
+      }
+
       // Convert sizes string to array
       const sizesArray = formData.sizes.split(',').map(size => size.trim()).filter(size => size.length > 0);
 
@@ -106,7 +136,7 @@ const AdminDashboard = () => {
         name: formData.name,
         brand: formData.brand || "GeneBrand",
         price: parseFloat(formData.price),
-        image_url: "/placeholder.svg", // Placeholder for now
+        image_url: imageUrl,
         rating: 4.5,
         is_new: true,
         is_sale: false,
@@ -118,6 +148,11 @@ const AdminDashboard = () => {
 
       let result;
       if (editingProductId) {
+        // If updating and no new image, keep existing image
+        if (!images || images.length === 0) {
+          delete productData.image_url;
+        }
+        
         // Update existing product
         result = await supabase
           .from('products')
@@ -200,6 +235,14 @@ const AdminDashboard = () => {
     if (!confirmed) return;
 
     try {
+      // First, get the product to delete its image
+      const { data: productData } = await supabase
+        .from('products')
+        .select('image_url')
+        .eq('id', productId)
+        .single();
+
+      // Delete the product from database
       const { error } = await supabase
         .from('products')
         .delete()
@@ -212,6 +255,16 @@ const AdminDashboard = () => {
           variant: "destructive"
         });
         return;
+      }
+
+      // Delete image from storage if it exists and is not placeholder
+      if (productData?.image_url && !productData.image_url.includes('placeholder.svg')) {
+        const imagePath = productData.image_url.split('/').pop();
+        if (imagePath) {
+          await supabase.storage
+            .from('product-images')
+            .remove([`products/${imagePath}`]);
+        }
       }
 
       toast({
@@ -343,10 +396,12 @@ const AdminDashboard = () => {
                 <Input
                   id="images"
                   type="file"
-                  multiple
                   accept="image/*"
                   onChange={(e) => setImages(e.target.files)}
                 />
+                <p className="text-sm text-muted-foreground">
+                  Selecione uma imagem para o produto (formato: JPG, PNG, WEBP)
+                </p>
               </div>
 
               <div className="flex gap-4">
