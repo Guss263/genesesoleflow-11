@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProductCardProps {
@@ -17,18 +18,28 @@ interface ProductCardProps {
   isSale?: boolean;
 }
 
-const Feminino = () => {
+const CategoryPage = () => {
+  const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<ProductCardProps[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const categoryLabels: { [key: string]: string } = {
+    'running': 'Running',
+    'casual': 'Casual',
+    'basketball': 'Basketball',
+    'lifestyle': 'Lifestyle'
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
+      if (!category) return;
+      
       setLoading(true);
       try {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('gender', 'feminino')
+          .eq('category', category)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -57,7 +68,9 @@ const Feminino = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [category]);
+
+  const categoryName = categoryLabels[category || ''] || 'Categoria';
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,11 +81,10 @@ const Feminino = () => {
           <div className="container">
             <div className="text-center space-y-4">
               <h1 className="text-4xl md:text-5xl font-bold">
-                Coleção <span className="text-primary">Feminina</span>
+                Categoria <span className="text-primary">{categoryName}</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Tênis femininos que combinam elegância e performance. 
-                Estilo único para mulheres que não abrem mão do conforto.
+                Descubra nossa seleção especial da categoria {categoryName.toLowerCase()}
               </p>
             </div>
           </div>
@@ -95,7 +107,7 @@ const Feminino = () => {
               <div className="text-center py-16">
                 <h2 className="text-2xl font-bold mb-4">Nenhum produto encontrado</h2>
                 <p className="text-muted-foreground">
-                  Não há produtos femininos disponíveis no momento.
+                  Não há produtos disponíveis nesta categoria no momento.
                 </p>
               </div>
             ) : (
@@ -113,4 +125,4 @@ const Feminino = () => {
   );
 };
 
-export default Feminino;
+export default CategoryPage;

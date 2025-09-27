@@ -2,6 +2,7 @@ import ProductCard from "./ProductCard";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductCardProps {
   id: string;
@@ -59,8 +60,20 @@ const ProductGrid = () => {
   if (loading) {
     return (
       <section className="py-16">
-        <div className="container text-center">
-          <p>Carregando produtos...</p>
+        <div className="container">
+          <div className="text-center mb-12">
+            <Skeleton className="h-8 w-64 mx-auto mb-4" />
+            <Skeleton className="h-4 w-96 mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
