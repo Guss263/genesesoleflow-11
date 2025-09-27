@@ -4,22 +4,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
     
-    if (email === "genese@gmail.com" && password === "Admin") {
-      // Store admin auth status
-      localStorage.setItem("isAdmin", "true");
-      navigate("/admin-dashboard");
-    } else {
+    try {
+      // Regra 1: Login de Administrador
+      if (email === "genese@gmail.com" && password === "Admin") {
+        localStorage.setItem("isAdmin", "true");
+        navigate("/admin-dashboard");
+        return;
+      }
+
+      // Regra 2: Login de Cliente com Supabase
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (authError) {
+        // Regra 3: Credenciais Inválidas
+        setError("E-mail ou senha incorretos.");
+        return;
+      }
+
+      if (data.user) {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para a página inicial...",
+        });
+        
+        // Redirecionar para a página inicial
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      }
+    } catch (error) {
       setError("E-mail ou senha incorretos.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,8 +92,12 @@ const AdminLogin = () => {
               />
             </div>
             
-            <Button type="submit" className="w-full hero-button">
-              Entrar
+            <Button 
+              type="submit" 
+              className="w-full hero-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
             
             {error && (

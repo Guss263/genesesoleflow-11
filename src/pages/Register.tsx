@@ -366,6 +366,19 @@ const Register = () => {
                     <Link to="/">Voltar à Loja</Link>
                   </Button>
                 </div>
+                
+                {/* Link para login */}
+                <div className="text-center pt-4">
+                  <p className="text-muted-foreground">
+                    Já possui uma conta?{" "}
+                    <Link 
+                      to="/admin-login" 
+                      className="text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      Realize o login
+                    </Link>
+                  </p>
+                </div>
               </form>
             </CardContent>
           </Card>
