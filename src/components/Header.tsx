@@ -39,9 +39,9 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navigationItems.map(item => item.href.startsWith('/') ? <Link key={item.label} to={item.href} className="nav-link text-sm font-medium">
+          {navigationItems.map(item => item.href.startsWith('/') ? <Link key={item.label} to={item.href} className="nav-link text-sm font-medium whitespace-nowrap">
                 {item.label}
-              </Link> : <a key={item.label} href={item.href} className="nav-link text-sm font-medium">
+              </Link> : <a key={item.label} href={item.href} className="nav-link text-sm font-medium whitespace-nowrap">
                 {item.label}
               </a>)}
         </nav>
