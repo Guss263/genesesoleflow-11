@@ -39,11 +39,19 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navigationItems.map(item => item.href.startsWith('/') ? <Link key={item.label} to={item.href} className="nav-link text-sm font-medium whitespace-nowrap">
+          {navigationItems.map(item => item.href.startsWith('/') ? 
+            <div key={item.label} className="relative group">
+              <Link to={item.href} className="nav-link text-sm font-medium whitespace-nowrap relative">
                 {item.label}
-              </Link> : <a key={item.label} href={item.href} className="nav-link text-sm font-medium whitespace-nowrap">
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary opacity-0 transform scale-x-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-x-100"></div>
+              </Link>
+            </div> : 
+            <div key={item.label} className="relative group">
+              <a href={item.href} className="nav-link text-sm font-medium whitespace-nowrap relative">
                 {item.label}
-              </a>)}
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary opacity-0 transform scale-x-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-x-100"></div>
+              </a>
+            </div>)}
         </nav>
 
         {/* Search and Actions */}

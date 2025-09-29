@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import nikeAirMaxWhite from "@/assets/nike-air-max-white.jpg";
+import converseChuckTaylor from "@/assets/converse-chuck-taylor.jpg";
+import adidasUltraboost from "@/assets/adidas-ultraboost.jpg";
+import airJordanRed from "@/assets/air-jordan-red.jpg";
+import nikeAirForcePink from "@/assets/nike-air-force-pink.jpg";
+import kidsSneakersColorful from "@/assets/kids-sneakers-colorful.jpg";
 
 interface ProductCardProps {
   id: string;
@@ -52,13 +58,25 @@ const ProductCard = ({
     }).format(value);
   };
 
+  const getImageSrc = () => {
+    const imageMap: { [key: string]: string } = {
+      'src/assets/nike-air-max-white.jpg': nikeAirMaxWhite,
+      'src/assets/converse-chuck-taylor.jpg': converseChuckTaylor,
+      'src/assets/adidas-ultraboost.jpg': adidasUltraboost,
+      'src/assets/air-jordan-red.jpg': airJordanRed,
+      'src/assets/nike-air-force-pink.jpg': nikeAirForcePink,
+      'src/assets/kids-sneakers-colorful.jpg': kidsSneakersColorful,
+    };
+    return imageMap[image] || image || "/placeholder.svg";
+  };
+
   return (
     <div className="product-card group">
       {/* Image Container */}
       <Link to={`/product/${id}`}>
         <div className="relative overflow-hidden rounded-lg mb-4 cursor-pointer">
           <img
-            src={image}
+            src={getImageSrc()}
             alt={name}
             className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
           />
