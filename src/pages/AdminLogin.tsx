@@ -38,9 +38,11 @@ const AdminLogin = () => {
       if (authError) {
         // Regra 3: Credenciais Inválidas ou E-mail não confirmado
         if (authError.message.includes('Email not confirmed')) {
-          setError("E-mail não confirmado. Verifique sua caixa de entrada.");
+          setError("E-mail não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.");
+        } else if (authError.message.includes('Invalid login credentials')) {
+          setError("E-mail ou senha incorretos. Verifique seus dados ou crie uma conta.");
         } else {
-          setError("E-mail ou senha incorretos.");
+          setError("Erro no login: " + authError.message);
         }
         return;
       }
