@@ -135,30 +135,29 @@ const Register = () => {
       }
 
       if (authData.user) {
-        // Salvar dados adicionais na tabela profiles
+        // Atualizar perfil com dados adicionais (profile já foi criado pela trigger)
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            email: data.email,
+          .update({
             full_name: data.fullName,
             phone: data.phone,
             address: `${data.street}, ${data.number} - ${data.neighborhood}, ${data.city} - ${data.state}, ${data.cep}`
-          });
+          })
+          .eq('user_id', authData.user.id);
 
         if (profileError) {
-          console.error('Erro ao salvar perfil:', profileError);
+          console.error('Erro ao atualizar perfil:', profileError);
         }
 
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: "Você já pode fazer login com suas credenciais.",
+          description: "Verifique seu e-mail para confirmar a conta e depois faça login.",
         });
         
         // Redirecionar para a página de login
         setTimeout(() => {
           navigate('/admin-login');
-        }, 1500);
+        }, 2000);
       }
     } catch (error) {
       console.error('Erro no cadastro:', error);
