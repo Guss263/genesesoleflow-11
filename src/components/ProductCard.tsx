@@ -101,14 +101,10 @@ const ProductCard = ({
             <Heart className="h-4 w-4" />
           </Button>
 
-          {/* Quick Add to Cart */}
+          {/* Quick View Details */}
           <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button 
-              className="w-full hero-button" 
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart();
-              }}
+              className="w-full hero-button"
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
               Ver Detalhes
