@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -104,19 +105,63 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Simular envio de dados
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Redirecionando para a simulação de pagamento...",
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: data.fullName,
+          }
+        }
       });
-      
-      // Redirecionar para a página de simulação de pagamento
-      setTimeout(() => {
-        navigate('/payment');
-      }, 1500);
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          toast({
+            title: "E-mail já cadastrado",
+            description: "Este e-mail já está em uso. Tente fazer login ou use outro e-mail.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: authError.message,
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      if (authData.user) {
+        // Salvar dados adicionais na tabela profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: authData.user.id,
+            email: data.email,
+            full_name: data.fullName,
+            phone: data.phone,
+            address: `${data.street}, ${data.number} - ${data.neighborhood}, ${data.city} - ${data.state}, ${data.cep}`
+          });
+
+        if (profileError) {
+          console.error('Erro ao salvar perfil:', profileError);
+        }
+
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Você já pode fazer login com suas credenciais.",
+        });
+        
+        // Redirecionar para a página de login
+        setTimeout(() => {
+          navigate('/admin-login');
+        }, 1500);
+      }
     } catch (error) {
+      console.error('Erro no cadastro:', error);
       toast({
         title: "Erro no cadastro",
         description: "Tente novamente mais tarde.",
