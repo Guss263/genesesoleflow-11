@@ -82,13 +82,18 @@ const Payment = () => {
       
       toast({
         title: "Pagamento processado com sucesso!",
-        description: "Seu pedido foi confirmado. Redirecionando...",
+        description: "Redirecionando para acompanhamento...",
       });
       
-      // Redirecionar para a página inicial
+      // Redirecionar para a página de acompanhamento
       setTimeout(() => {
-        navigate('/');
-      }, 2000);
+        navigate('/order-tracking', {
+          state: {
+            orderNumber: Math.random().toString(36).substring(2, 10).toUpperCase(),
+            cartTotal: cartTotal
+          }
+        });
+      }, 1500);
     } catch (error) {
       toast({
         title: "Erro no processamento",

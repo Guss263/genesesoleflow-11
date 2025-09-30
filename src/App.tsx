@@ -24,6 +24,7 @@ import About from "./pages/About";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import CategoryPage from "./pages/CategoryPage";
+import OrderTracking from "./pages/OrderTracking";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/register" element={<Register />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
