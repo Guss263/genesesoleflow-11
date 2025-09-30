@@ -1,24 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft } from "lucide-react";
+
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+
     try {
       // Regra 1: Login de Administrador
       if (email === "genese@gmail.com" && password === "Admin") {
@@ -28,13 +30,11 @@ const AdminLogin = () => {
       }
 
       // Regra 2: Login de Cliente com Supabase
-      const {
-        data,
-        error: authError
-      } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       });
+
       if (authError) {
         // Regra 3: Credenciais Inválidas ou E-mail não confirmado
         if (authError.message.includes('Email not confirmed')) {
@@ -44,6 +44,7 @@ const AdminLogin = () => {
         }
         return;
       }
+
       if (data.user) {
         toast({
           title: "Login realizado com sucesso!",
@@ -61,33 +62,63 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
-  return <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-foreground">Página de Login </CardTitle>
+        <CardHeader>
+          <div className="flex items-center justify-start mb-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Link>
+            </Button>
+          </div>
+          <CardTitle className="text-2xl font-bold text-foreground text-center">
+            Página de Login
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full" />
+              <Input 
+                id="email" 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                required 
+                className="w-full" 
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full" />
+              <Input 
+                id="password" 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                required 
+                className="w-full" 
+              />
             </div>
             
             <Button type="submit" className="w-full hero-button" disabled={isLoading}>
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
             
-            {error && <p className="text-destructive text-sm text-center mt-2">
+            {error && (
+              <p className="text-destructive text-sm text-center mt-2">
                 {error}
-              </p>}
+              </p>
+            )}
           </form>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default AdminLogin;
