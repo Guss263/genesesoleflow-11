@@ -2,13 +2,22 @@ import { useState } from "react";
 import { Search, ShoppingCart, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const {
-    itemCount
-  } = useCart();
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const { itemCount } = useCart();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
   const navigationItems = [{
     label: "Masculino",
     href: "/masculino"
@@ -57,10 +66,16 @@ const Header = () => {
         {/* Search and Actions */}
         <div className="flex items-center space-x-4">
           {/* Search Bar */}
-          <div className="hidden lg:flex items-center bg-secondary rounded-full px-4 py-2 w-60">
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-secondary rounded-full px-4 py-2 w-60">
             <Search className="h-4 w-4 text-muted-foreground mr-2" />
-            <input type="text" placeholder="Buscar tênis..." className="bg-transparent border-none outline-none flex-1 text-sm" />
-          </div>
+            <input 
+              type="text" 
+              placeholder="Buscar tênis..." 
+              className="bg-transparent border-none outline-none flex-1 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
 
           {/* Mobile Search Button */}
           <Button variant="ghost" size="icon" className="lg:hidden">
