@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,8 +35,11 @@ type PaymentForm = z.infer<typeof paymentSchema>;
 
 const Payment = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  const { cartTotal = 299.90, cartItemCount = 1 } = location.state || {};
 
   const {
     register,
@@ -122,16 +125,16 @@ const Payment = () => {
                   </h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="text-foreground">R$ 299,90</span>
+                      <span className="text-muted-foreground">Itens ({cartItemCount}):</span>
+                      <span className="text-foreground">R$ {cartTotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Frete:</span>
-                      <span className="text-foreground">R$ 15,00</span>
+                      <span className="text-foreground">Grátis</span>
                     </div>
                     <div className="border-t border-border pt-2 flex justify-between font-semibold">
                       <span className="text-foreground">Total:</span>
-                      <span className="text-primary">R$ 314,90</span>
+                      <span className="text-primary">R$ {cartTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -168,7 +171,7 @@ const Payment = () => {
                       <Label htmlFor="pix" className="flex items-center space-x-2 cursor-pointer flex-1">
                         <Smartphone className="h-5 w-5 text-primary" />
                         <span>PIX - Desconto de 5%</span>
-                        <span className="text-sm text-primary font-semibold ml-auto">R$ 299,16</span>
+                        <span className="text-sm text-primary font-semibold ml-auto">R$ {(cartTotal * 0.95).toFixed(2)}</span>
                       </Label>
                     </div>
                     
@@ -177,7 +180,7 @@ const Payment = () => {
                       <Label htmlFor="boleto" className="flex items-center space-x-2 cursor-pointer flex-1">
                         <Building className="h-5 w-5 text-primary" />
                         <span>Boleto Bancário - Desconto de 3%</span>
-                        <span className="text-sm text-primary font-semibold ml-auto">R$ 305,45</span>
+                        <span className="text-sm text-primary font-semibold ml-auto">R$ {(cartTotal * 0.97).toFixed(2)}</span>
                       </Label>
                     </div>
                   </RadioGroup>
@@ -303,7 +306,7 @@ const Payment = () => {
                     asChild
                     className="flex-1"
                   >
-                    <Link to="/register">Voltar ao Cadastro</Link>
+                    <Link to="/cart">Voltar ao Carrinho</Link>
                   </Button>
                 </div>
               </form>

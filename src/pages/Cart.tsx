@@ -3,10 +3,21 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    navigate('/payment', { 
+      state: { 
+        cartItems: items,
+        cartTotal: total,
+        cartItemCount: itemCount
+      } 
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -123,7 +134,7 @@ const Cart = () => {
                   </div>
                 </div>
                 
-                <Button className="w-full" size="lg">
+                <Button className="w-full" size="lg" onClick={handleCheckout}>
                   Finalizar Compra
                 </Button>
                 
