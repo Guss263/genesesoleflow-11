@@ -146,7 +146,7 @@ const Register = () => {
           .eq('user_id', authData.user.id);
 
         if (profileError) {
-          console.error('Erro ao atualizar perfil:', profileError);
+          // Log error but don't expose to user
         }
 
         toast({

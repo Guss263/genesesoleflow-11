@@ -22,21 +22,14 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Regra 1: Login de Administrador
-      if (email === "genese@gmail.com" && password === "Admin") {
-        localStorage.setItem("isAdmin", "true");
-        navigate("/admin-dashboard");
-        return;
-      }
-
-      // Regra 2: Login de Cliente com Supabase
+      // Login com Supabase
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       });
 
       if (authError) {
-        // Regra 3: Credenciais Inválidas ou E-mail não confirmado
+        // Credenciais Inválidas ou E-mail não confirmado
         if (authError.message.includes('Email not confirmed')) {
           setError("E-mail não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.");
         } else if (authError.message.includes('Invalid login credentials')) {
@@ -48,15 +41,31 @@ const AdminLogin = () => {
       }
 
       if (data.user) {
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando para a página inicial..."
-        });
+        // Verificar se o usuário tem role de admin
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .single();
 
-        // Redirecionar para a página inicial
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
+        if (roles) {
+          // Usuário é admin
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo ao painel administrativo."
+          });
+          navigate("/admin-dashboard");
+        } else {
+          // Usuário não é admin
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Redirecionando para a página inicial..."
+          });
+          setTimeout(() => {
+            navigate("/");
+          }, 1000);
+        }
       }
     } catch (error) {
       setError("E-mail ou senha incorretos.");

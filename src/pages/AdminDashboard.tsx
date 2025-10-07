@@ -28,13 +28,37 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated as admin
-    const isAdmin = localStorage.getItem("isAdmin");
-    if (!isAdmin) {
-      navigate("/admin-login");
-    } else {
+    const checkAdminAccess = async () => {
+      // Verificar se o usuário está autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/admin-login");
+        return;
+      }
+
+      // Verificar se o usuário tem role de admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!roles) {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar esta página.",
+          variant: "destructive"
+        });
+        navigate("/");
+        return;
+      }
+
       fetchProducts();
-    }
+    };
+
+    checkAdminAccess();
   }, [navigate]);
 
   const fetchProducts = async () => {
@@ -283,8 +307,8 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAdmin");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/");
   };
 

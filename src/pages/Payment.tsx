@@ -18,10 +18,50 @@ const paymentSchema = z.object({
   paymentMethod: z.enum(['credit', 'debit', 'pix', 'boleto'], {
     required_error: "Selecione um método de pagamento",
   }),
-  cardNumber: z.string().optional(),
-  cardName: z.string().optional(),
-  cardExpiry: z.string().optional(),
-  cardCvv: z.string().optional(),
+  cardNumber: z.string()
+    .regex(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/, "Número do cartão inválido")
+    .refine((val) => {
+      // Algoritmo de Luhn para validar número do cartão
+      const digits = val.replace(/\s/g, '');
+      let sum = 0;
+      let isEven = false;
+      
+      for (let i = digits.length - 1; i >= 0; i--) {
+        let digit = parseInt(digits[i]);
+        
+        if (isEven) {
+          digit *= 2;
+          if (digit > 9) {
+            digit -= 9;
+          }
+        }
+        
+        sum += digit;
+        isEven = !isEven;
+      }
+      
+      return sum % 10 === 0;
+    }, "Número do cartão inválido")
+    .optional(),
+  cardName: z.string()
+    .trim()
+    .min(3, "Nome deve ter no mínimo 3 caracteres")
+    .max(100, "Nome muito longo")
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome deve conter apenas letras")
+    .optional(),
+  cardExpiry: z.string()
+    .regex(/^\d{2}\/\d{2}$/, "Formato deve ser MM/AA")
+    .refine((val) => {
+      if (!val) return true;
+      const [month, year] = val.split('/').map(Number);
+      if (month < 1 || month > 12) return false;
+      const expiry = new Date(2000 + year, month - 1);
+      return expiry > new Date();
+    }, "Cartão expirado")
+    .optional(),
+  cardCvv: z.string()
+    .regex(/^\d{3,4}$/, "CVV deve ter 3 ou 4 dígitos")
+    .optional(),
 }).refine((data) => {
   if (data.paymentMethod === 'credit' || data.paymentMethod === 'debit') {
     return data.cardNumber && data.cardName && data.cardExpiry && data.cardCvv;
