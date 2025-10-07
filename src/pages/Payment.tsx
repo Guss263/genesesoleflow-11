@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +11,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { CreditCard, Smartphone, Building } from 'lucide-react';
+import { CreditCard, Smartphone, Building, Copy, Check } from 'lucide-react';
+import QRCode from 'react-qr-code';
 
 const paymentSchema = z.object({
   paymentMethod: z.enum(['credit', 'debit', 'pix', 'boleto'], {
@@ -38,6 +39,10 @@ const Payment = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [pixCode, setPixCode] = useState('');
+  const [boletoCode, setBoletoCode] = useState('');
+  const [copiedPix, setCopiedPix] = useState(false);
+  const [copiedBoleto, setCopiedBoleto] = useState(false);
 
   const { cartTotal = 299.90, cartItemCount = 1 } = location.state || {};
 
@@ -52,6 +57,36 @@ const Payment = () => {
   });
 
   const paymentMethod = watch('paymentMethod');
+
+  // Gerar códigos quando o método de pagamento for selecionado
+  useEffect(() => {
+    if (paymentMethod === 'pix' && !pixCode) {
+      // Gerar chave PIX aleatória (simulação)
+      const randomKey = `00020126580014br.gov.bcb.pix0136${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}5204000053039865802BR5925LOJA SNEAKERS6009SAO PAULO62070503***63041D3D`;
+      setPixCode(randomKey);
+    }
+    
+    if (paymentMethod === 'boleto' && !boletoCode) {
+      // Gerar código de barras do boleto (simulação)
+      const randomBoleto = `${Math.floor(10000000000 + Math.random() * 90000000000)}.${Math.floor(10000 + Math.random() * 90000)} ${Math.floor(10000 + Math.random() * 90000)}.${Math.floor(100000 + Math.random() * 900000)} ${Math.floor(10000 + Math.random() * 90000)}.${Math.floor(100000 + Math.random() * 900000)} ${Math.floor(1 + Math.random() * 9)} ${Math.floor(10000000000000 + Math.random() * 90000000000000)}`;
+      setBoletoCode(randomBoleto);
+    }
+  }, [paymentMethod, pixCode, boletoCode]);
+
+  const copyToClipboard = (text: string, type: 'pix' | 'boleto') => {
+    navigator.clipboard.writeText(text);
+    if (type === 'pix') {
+      setCopiedPix(true);
+      setTimeout(() => setCopiedPix(false), 2000);
+    } else {
+      setCopiedBoleto(true);
+      setTimeout(() => setCopiedBoleto(false), 2000);
+    }
+    toast({
+      title: "Copiado!",
+      description: `Código ${type === 'pix' ? 'PIX' : 'do boleto'} copiado para área de transferência.`,
+    });
+  };
 
   const formatCardNumber = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
@@ -271,27 +306,99 @@ const Payment = () => {
 
                 {/* Informações PIX */}
                 {paymentMethod === 'pix' && (
-                  <div className="bg-accent rounded-lg p-4">
-                    <h4 className="font-semibold text-foreground mb-2">Como funciona o PIX:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Após a confirmação, você receberá o código PIX</li>
-                      <li>• Abra o app do seu banco e escaneie o QR Code</li>
-                      <li>• O pagamento é processado instantaneamente</li>
-                      <li>• Desconto de 5% já aplicado no valor final</li>
-                    </ul>
+                  <div className="bg-accent rounded-lg p-6 space-y-4">
+                    <h4 className="font-semibold text-foreground text-lg mb-4">Pagamento via PIX</h4>
+                    
+                    {/* QR Code */}
+                    <div className="flex justify-center bg-white p-4 rounded-lg">
+                      <QRCode value={pixCode} size={200} />
+                    </div>
+                    
+                    {/* Chave PIX */}
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Chave PIX (Copiar e Colar):</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={pixCode} 
+                          readOnly 
+                          className="font-mono text-xs"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(pixCode, 'pix')}
+                        >
+                          {copiedPix ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Instruções */}
+                    <div className="pt-2">
+                      <h5 className="font-semibold text-foreground mb-2">Instruções:</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Abra o app do seu banco</li>
+                        <li>• Escolha pagar com PIX QR Code ou Copia e Cola</li>
+                        <li>• Escaneie o QR Code ou cole a chave PIX</li>
+                        <li>• Confirme o pagamento de R$ {(cartTotal * 0.95).toFixed(2)}</li>
+                        <li>• Desconto de 5% já aplicado</li>
+                      </ul>
+                    </div>
                   </div>
                 )}
 
                 {/* Informações Boleto */}
                 {paymentMethod === 'boleto' && (
-                  <div className="bg-accent rounded-lg p-4">
-                    <h4 className="font-semibold text-foreground mb-2">Como funciona o Boleto:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Após a confirmação, você receberá o boleto por e-mail</li>
-                      <li>• Pague em qualquer banco ou lotérica</li>
-                      <li>• Prazo de vencimento: 3 dias úteis</li>
-                      <li>• Desconto de 3% já aplicado no valor final</li>
-                    </ul>
+                  <div className="bg-accent rounded-lg p-6 space-y-4">
+                    <h4 className="font-semibold text-foreground text-lg mb-4">Boleto Bancário</h4>
+                    
+                    {/* Código de Barras */}
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Código de Barras do Boleto:</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={boletoCode} 
+                          readOnly 
+                          className="font-mono text-xs"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyToClipboard(boletoCode, 'boleto')}
+                        >
+                          {copiedBoleto ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Informações do Boleto */}
+                    <div className="bg-background/50 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Valor:</span>
+                        <span className="text-foreground font-semibold">R$ {(cartTotal * 0.97).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Vencimento:</span>
+                        <span className="text-foreground">{new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Desconto:</span>
+                        <span className="text-primary">3% (R$ {(cartTotal * 0.03).toFixed(2)})</span>
+                      </div>
+                    </div>
+
+                    {/* Instruções */}
+                    <div className="pt-2">
+                      <h5 className="font-semibold text-foreground mb-2">Instruções:</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Copie o código de barras acima</li>
+                        <li>• Pague em qualquer banco, lotérica ou app bancário</li>
+                        <li>• Prazo de vencimento: 3 dias úteis</li>
+                        <li>• Após o pagamento, o pedido será processado em até 2 dias úteis</li>
+                      </ul>
+                    </div>
                   </div>
                 )}
 
