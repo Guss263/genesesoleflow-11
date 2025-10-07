@@ -40,10 +40,7 @@ const About = () => {
               </Button>
             </a>
             <a href="#imprensa">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Newspaper className="h-4 w-4" />
-                Imprensa
-              </Button>
+              
             </a>
             <a href="#sustentabilidade">
               <Button variant="outline" className="flex items-center gap-2">
