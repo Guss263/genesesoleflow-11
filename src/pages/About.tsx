@@ -5,14 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Users, Newspaper, Leaf, HandHeart, ArrowUp } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
 const About = () => {
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -132,32 +132,7 @@ const About = () => {
         {/* Imprensa */}
         <section id="imprensa" className="scroll-mt-24">
           <Card className="shadow-card">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Newspaper className="h-8 w-8 text-primary" />
-                <h2 className="text-3xl font-bold text-foreground">Imprensa</h2>
-              </div>
-              <div className="space-y-4 text-muted-foreground">
-                <p className="text-lg leading-relaxed">
-                  A GeneseFLOW está sempre pronta para compartilhar suas inovações, lançamentos e marcos importantes 
-                  com a imprensa especializada e veículos de comunicação.
-                </p>
-                <p className="text-lg leading-relaxed">
-                  Nossa equipe de comunicação está disponível para fornecer informações sobre produtos, tendências 
-                  do mercado de calçados esportivos, entrevistas com executivos e materiais de alta qualidade para 
-                  suas matérias.
-                </p>
-                <div className="bg-muted p-6 rounded-lg mt-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-3">Destaques Recentes:</h3>
-                  <ul className="space-y-2 text-lg">
-                    <li>• Lançamento da linha EcoSport - calçados 100% sustentáveis</li>
-                    <li>• Parceria com atletas olímpicos brasileiros</li>
-                    <li>• Expansão para o mercado internacional</li>
-                    <li>• Prêmio Inovação em Design 2024</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
+            
           </Card>
         </section>
 
@@ -250,18 +225,12 @@ const About = () => {
 
       {/* Back to Top Button */}
       <div className="fixed bottom-8 right-8 z-50">
-        <Button
-          onClick={scrollToTop}
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-glow"
-        >
+        <Button onClick={scrollToTop} size="icon" className="h-12 w-12 rounded-full shadow-glow">
           <ArrowUp className="h-5 w-5" />
         </Button>
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default About;
