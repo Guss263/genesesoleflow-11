@@ -156,7 +156,7 @@ const Register = () => {
         
         // Redirecionar para a página de login
         setTimeout(() => {
-          navigate('/admin-login');
+          navigate('/login');
         }, 2000);
       }
     } catch (error) {

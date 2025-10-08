@@ -19,6 +19,9 @@ import Masculino from "./pages/Masculino";
 import Feminino from "./pages/Feminino";
 import Infantil from "./pages/Infantil";
 import Register from "./pages/Register";
+import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import About from "./pages/About";
 import AdminLogin from "./pages/AdminLogin";
@@ -51,6 +54,9 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/about" element={<About />} />
