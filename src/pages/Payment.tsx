@@ -19,9 +19,12 @@ const Payment = () => {
     setIsLoading(true);
 
     try {
+      console.log("Iniciando processo de checkout...");
+      
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
+        console.error("Usuário não autenticado");
         toast({
           title: "Erro",
           description: "Você precisa estar logado para finalizar a compra.",
@@ -31,7 +34,10 @@ const Payment = () => {
         return;
       }
 
+      console.log("Usuário autenticado:", user.email);
+
       if (items.length === 0) {
+        console.error("Carrinho vazio");
         toast({
           title: "Carrinho vazio",
           description: "Adicione produtos ao carrinho antes de continuar.",
@@ -41,9 +47,12 @@ const Payment = () => {
         return;
       }
 
+      console.log("Itens no carrinho:", items.length, "Total:", total);
+
       // Create order in database first
       const orderNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
 
+      console.log("Criando pedido no banco de dados...");
       const { error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -54,9 +63,15 @@ const Payment = () => {
           payment_method: 'stripe',
         });
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error("Erro ao criar pedido:", orderError);
+        throw orderError;
+      }
+
+      console.log("Pedido criado com sucesso:", orderNumber);
 
       // Call Stripe checkout function
+      console.log("Chamando função create-checkout...");
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           items: items.map(item => ({
@@ -72,19 +87,26 @@ const Payment = () => {
         },
       });
 
-      if (error) throw error;
+      console.log("Resposta da função:", { data, error });
+
+      if (error) {
+        console.error("Erro da edge function:", error);
+        throw error;
+      }
 
       if (data?.url) {
+        console.log("URL de checkout recebida, limpando carrinho e redirecionando...");
         // Clear cart before redirecting
         clearCart();
         
         // Redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
+        console.error("URL não recebida na resposta:", data);
         throw new Error('URL de checkout não recebida');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('Erro completo no checkout:', error);
       toast({
         title: "Erro ao processar pagamento",
         description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
