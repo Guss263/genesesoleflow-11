@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/hooks/useWishlist";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import nikeAirMaxWhite from "@/assets/nike-air-max-white.jpg";
 import converseChuckTaylor from "@/assets/converse-chuck-taylor.jpg";
 import adidasUltraboost from "@/assets/adidas-ultraboost.jpg";
@@ -36,6 +38,8 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [isWishlisted, setIsWishlisted] = useState(isInWishlist(id));
 
   const handleAddToCart = () => {
     addItem({
@@ -50,6 +54,19 @@ const ProductCard = ({
       title: "Produto adicionado!",
       description: `${name} foi adicionado ao seu carrinho.`,
     });
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isWishlisted) {
+      const success = await removeFromWishlist(id);
+      if (success) setIsWishlisted(false);
+    } else {
+      const success = await addToWishlist(id);
+      if (success) setIsWishlisted(true);
+    }
   };
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -74,11 +91,11 @@ const ProductCard = ({
     <div className="product-card group">
       {/* Image Container */}
       <Link to={`/product/${id}`}>
-        <div className="relative overflow-hidden rounded-lg mb-4 cursor-pointer">
+        <div className="relative overflow-hidden rounded-lg mb-3 md:mb-4 cursor-pointer">
           <img
             src={getImageSrc()}
             alt={name}
-            className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-48 sm:h-56 md:h-64 object-cover transition-transform duration-300 group-hover:scale-110"
           />
           
           {/* Badges */}
@@ -95,10 +112,10 @@ const ProductCard = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-3 right-3 bg-background/80 hover:bg-background"
-            onClick={(e) => e.preventDefault()}
+            className={`absolute top-3 right-3 bg-background/80 hover:bg-background ${isWishlisted ? 'text-destructive' : ''}`}
+            onClick={handleWishlistToggle}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
           </Button>
 
           {/* Quick View Details */}

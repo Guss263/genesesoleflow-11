@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { CreditCard, Smartphone, Building, Copy, Check } from 'lucide-react';
@@ -152,6 +153,36 @@ const Payment = () => {
     setIsLoading(true);
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para finalizar a compra.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      // Criar pedido no banco de dados
+      const orderNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const orderTotal = data.paymentMethod === 'pix' ? cartTotal * 0.95 : 
+                         data.paymentMethod === 'boleto' ? cartTotal * 0.97 : 
+                         cartTotal;
+
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          order_number: orderNumber,
+          status: 'pending',
+          total: orderTotal,
+          payment_method: data.paymentMethod,
+        });
+
+      if (orderError) throw orderError;
+
       // Simular processamento do pagamento
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -164,12 +195,13 @@ const Payment = () => {
       setTimeout(() => {
         navigate('/order-tracking', {
           state: {
-            orderNumber: Math.random().toString(36).substring(2, 10).toUpperCase(),
-            cartTotal: cartTotal
+            orderNumber: orderNumber,
+            cartTotal: orderTotal
           }
         });
       }, 1500);
     } catch (error) {
+      console.error('Payment error:', error);
       toast({
         title: "Erro no processamento",
         description: "Tente novamente mais tarde.",

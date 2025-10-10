@@ -80,14 +80,14 @@ const ProductGrid = () => {
   }
 
   return (
-    <section className="py-16">
-      <div className="container">
+    <section className="py-12 md:py-16">
+      <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">
             Produtos em Destaque
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Descubra nossa seleção especial dos tênis mais procurados e amados 
             pelos nossos clientes
           </p>
