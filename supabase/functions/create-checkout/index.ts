@@ -18,18 +18,38 @@ serve(async (req) => {
   );
 
   try {
-    console.log("Iniciando checkout...");
-    const body = await req.json();
-    console.log("Body recebido:", JSON.stringify(body, null, 2));
+    console.log("=== INÍCIO DO CHECKOUT ===");
+    
+    // Valida body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Body recebido:", JSON.stringify(body, null, 2));
+    } catch (e) {
+      console.error("Erro ao fazer parse do JSON:", e);
+      throw new Error("Body da requisição inválido");
+    }
     
     const { items, total } = body;
     
-    if (!items || items.length === 0) {
+    // Valida items
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error("Erro: carrinho vazio ou inválido");
       throw new Error("Nenhum item no carrinho");
     }
+    console.log(`Número de itens: ${items.length}`);
     
+    // Valida total
+    if (!total || typeof total !== 'number' || total <= 0) {
+      console.error("Erro: total inválido:", total);
+      throw new Error("Total do pedido inválido");
+    }
+    console.log(`Total do pedido: R$ ${total.toFixed(2)}`);
+    
+    // Autentica usuário
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("Erro: header de autorização não encontrado");
       throw new Error("Header de autorização não encontrado");
     }
     
@@ -38,77 +58,103 @@ serve(async (req) => {
     
     if (authError) {
       console.error("Erro de autenticação:", authError);
-      throw new Error("Erro ao autenticar usuário");
+      throw new Error(`Erro ao autenticar usuário: ${authError.message}`);
     }
     
     const user = data.user;
     
     if (!user?.email) {
+      console.error("Erro: usuário sem email");
       throw new Error("Usuário não autenticado ou email não disponível");
     }
     
-    console.log("Usuário autenticado:", user.email);
+    console.log("✓ Usuário autenticado:", user.email);
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Inicializa Stripe
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      console.error("Erro: STRIPE_SECRET_KEY não configurada");
+      throw new Error("Stripe não configurado");
+    }
+    
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
-    
-    console.log("Stripe inicializado");
+    console.log("✓ Stripe inicializado");
 
-    // Check if customer exists
+    // Verifica se cliente existe
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      console.log("Cliente existente encontrado:", customerId);
+      console.log("✓ Cliente Stripe existente:", customerId);
     } else {
-      console.log("Novo cliente - será criado no checkout");
+      console.log("ℹ Novo cliente - será criado no checkout");
     }
 
-    // Create line items from cart
-    const lineItems = items.map((item: any) => {
-      console.log("Processando item:", item.name, "Preço:", item.price);
+    // Cria line items do carrinho
+    const lineItems = items.map((item: any, index: number) => {
+      console.log(`Item ${index + 1}:`, item.name, "| Preço: R$", item.price, "| Qtd:", item.quantity);
+      
+      // Valida cada item
+      if (!item.price || typeof item.price !== 'number' || item.price <= 0) {
+        throw new Error(`Preço inválido para o item: ${item.name}`);
+      }
+      
+      if (!item.quantity || typeof item.quantity !== 'number' || item.quantity <= 0) {
+        throw new Error(`Quantidade inválida para o item: ${item.name}`);
+      }
+      
       return {
         price_data: {
           currency: "brl",
           product_data: {
-            name: `${item.brand} - ${item.name}`,
+            name: `${item.brand || 'Produto'} - ${item.name || 'Sem nome'}`,
             images: item.image ? [item.image] : [],
             description: `Tamanho: ${item.size || 'N/A'}, Cor: ${item.color || 'N/A'}`,
           },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
+          unit_amount: Math.round(item.price * 100), // Converte para centavos
         },
         quantity: item.quantity,
       };
     });
 
-    console.log("Line items criados:", lineItems.length);
+    console.log(`✓ ${lineItems.length} line items criados`);
 
-    // Create checkout session
+    // Cria sessão de checkout
+    console.log("Criando sessão Stripe Checkout...");
+    const origin = req.headers.get("origin") || "https://59fa342c-e162-4a36-8b42-90a2f90e2df0.lovableproject.com";
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: lineItems,
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/order-tracking?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/cart`,
+      success_url: `${origin}/order-tracking?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/cart`,
       metadata: {
         user_id: user.id,
       },
     });
 
-    console.log("Sessão criada com sucesso:", session.id);
+    console.log("✓ Sessão criada com sucesso!");
+    console.log("Session ID:", session.id);
+    console.log("Checkout URL:", session.url);
+    console.log("=== FIM DO CHECKOUT ===");
 
     return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Erro no checkout:", error);
+    console.error("❌ ERRO NO CHECKOUT:", error);
+    console.error("Tipo do erro:", typeof error);
+    console.error("Stack trace:", error instanceof Error ? error.stack : "N/A");
+    
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Erro ao criar checkout",
-        details: error instanceof Error ? error.stack : undefined
+        details: error instanceof Error ? error.stack : String(error)
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

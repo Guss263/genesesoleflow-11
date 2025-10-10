@@ -65,6 +65,17 @@ const Login = () => {
 
   const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
     try {
+      // Para Apple, Facebook e outros provedores que não estão habilitados,
+      // mostre uma mensagem informativa
+      if (provider === 'facebook' || provider === 'apple') {
+        toast({
+          title: "Provider não configurado",
+          description: `O login com ${provider === 'facebook' ? 'Facebook' : 'Apple'} precisa ser configurado no Supabase. Use o login com Google ou e-mail/senha.`,
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -73,6 +84,7 @@ const Login = () => {
       });
 
       if (error) {
+        console.error('Social login error:', error);
         toast({
           variant: "destructive",
           title: "Erro no login social",
@@ -80,6 +92,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error('Social login exception:', error);
       toast({
         variant: "destructive",
         title: "Erro",

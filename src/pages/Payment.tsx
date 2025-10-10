@@ -19,12 +19,13 @@ const Payment = () => {
     setIsLoading(true);
 
     try {
-      console.log("Iniciando processo de checkout...");
+      console.log("=== INICIANDO CHECKOUT STRIPE ===");
       
+      // Verifica autenticação
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.error("Usuário não autenticado");
+        console.error("❌ Usuário não autenticado");
         toast({
           title: "Erro",
           description: "Você precisa estar logado para finalizar a compra.",
@@ -34,10 +35,11 @@ const Payment = () => {
         return;
       }
 
-      console.log("Usuário autenticado:", user.email);
+      console.log("✓ Usuário autenticado:", user.email);
 
-      if (items.length === 0) {
-        console.error("Carrinho vazio");
+      // Verifica carrinho
+      if (!items || items.length === 0) {
+        console.error("❌ Carrinho vazio");
         toast({
           title: "Carrinho vazio",
           description: "Adicione produtos ao carrinho antes de continuar.",
@@ -47,12 +49,12 @@ const Payment = () => {
         return;
       }
 
-      console.log("Itens no carrinho:", items.length, "Total:", total);
+      console.log(`✓ Carrinho com ${items.length} itens | Total: R$ ${total.toFixed(2)}`);
 
-      // Create order in database first
+      // Cria pedido no banco de dados
       const orderNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      console.log("Criando pedido no banco de dados...");
+      console.log("Criando pedido no banco...");
       const { error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -64,56 +66,67 @@ const Payment = () => {
         });
 
       if (orderError) {
-        console.error("Erro ao criar pedido:", orderError);
-        throw orderError;
+        console.error("❌ Erro ao criar pedido:", orderError);
+        throw new Error(`Erro ao criar pedido: ${orderError.message}`);
       }
 
-      console.log("Pedido criado com sucesso:", orderNumber);
+      console.log("✓ Pedido criado:", orderNumber);
 
-      // Call Stripe checkout function
-      console.log("Chamando função create-checkout...");
+      // Chama função Stripe checkout
+      console.log("Chamando edge function create-checkout...");
+      
+      const payload = {
+        items: items.map(item => ({
+          name: item.name,
+          brand: item.brand,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+        })),
+        total: total,
+      };
+      
+      console.log("Payload:", JSON.stringify(payload, null, 2));
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          items: items.map(item => ({
-            name: item.name,
-            brand: item.brand,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-            size: item.size,
-            color: item.color,
-          })),
-          total: total,
-        },
+        body: payload,
       });
 
-      console.log("Resposta da função:", { data, error });
+      console.log("Resposta recebida:");
+      console.log("- Data:", data);
+      console.log("- Error:", error);
 
       if (error) {
-        console.error("Erro da edge function:", error);
-        throw error;
+        console.error("❌ Erro da edge function:", error);
+        throw new Error(error.message || "Erro ao criar sessão de checkout");
       }
 
       if (data?.url) {
-        console.log("URL de checkout recebida, limpando carrinho e redirecionando...");
-        // Clear cart before redirecting
+        console.log("✓ URL de checkout recebida!");
+        console.log("Limpando carrinho...");
         clearCart();
         
-        // Redirect to Stripe Checkout
+        console.log("Redirecionando para Stripe...");
         window.location.href = data.url;
       } else {
-        console.error("URL não recebida na resposta:", data);
-        throw new Error('URL de checkout não recebida');
+        console.error("❌ URL não recebida. Data:", data);
+        throw new Error('URL de checkout não foi retornada pela função');
       }
     } catch (error) {
-      console.error('Erro completo no checkout:', error);
+      console.error('❌ ERRO COMPLETO:', error);
+      console.error('Tipo:', typeof error);
+      console.error('Message:', error instanceof Error ? error.message : String(error));
+      
       toast({
         title: "Erro ao processar pagamento",
-        description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Tente novamente.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      console.log("=== FIM DO CHECKOUT ===");
     }
   };
 
