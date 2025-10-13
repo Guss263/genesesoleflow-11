@@ -158,14 +158,15 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    // Log detailed error server-side only
     console.error("❌ ERRO NO CHECKOUT:", error);
-    console.error("Tipo do erro:", typeof error);
     console.error("Stack trace:", error instanceof Error ? error.stack : "N/A");
     
+    // Return generic error message to client
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Erro ao criar checkout",
-        details: error instanceof Error ? error.stack : String(error)
+        error: "Não foi possível processar o pagamento. Por favor, tente novamente ou entre em contato com o suporte.",
+        trackingId: crypto.randomUUID()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

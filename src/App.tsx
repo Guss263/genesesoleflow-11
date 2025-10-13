@@ -26,6 +26,7 @@ import Payment from "./pages/Payment";
 import About from "./pages/About";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
 import CategoryPage from "./pages/CategoryPage";
 import OrderTracking from "./pages/OrderTracking";
 import SearchResults from "./pages/SearchResults";
@@ -68,7 +69,11 @@ const App = () => (
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-dashboard" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
             <Route path="/categoria/:category" element={<CategoryPage />} />
             <Route path="/search" element={<SearchResults />} />
             <Route path="/help" element={<Help />} />
