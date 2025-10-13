@@ -4,19 +4,19 @@ const Footer = () => {
     title: "Produtos",
     links: [{
       label: "Masculino",
-      href: "#"
+      href: "/masculino"
     }, {
       label: "Feminino",
-      href: "#"
+      href: "/feminino"
     }, {
       label: "Infantil",
-      href: "#"
+      href: "/infantil"
     }, {
       label: "Lançamentos",
-      href: "#"
+      href: "/new-releases"
     }, {
       label: "Promoções",
-      href: "#"
+      href: "/promocoes"
     }]
   }, {
     title: "Atendimento",
