@@ -45,9 +45,6 @@ const Footer = () => {
       label: "Trabalhe Conosco",
       href: "/about#trabalhe-conosco"
     }, {
-      label: "Imprensa",
-      href: "/about#imprensa"
-    }, {
       label: "Sustentabilidade",
       href: "/about#sustentabilidade"
     }, {
