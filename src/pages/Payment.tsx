@@ -108,8 +108,12 @@ const Payment = () => {
         console.log("Limpando carrinho...");
         clearCart();
         
-        console.log("Redirecionando para Stripe...");
-        window.location.href = data.url;
+        console.log("Abrindo Stripe em nova aba...");
+        const win = window.open(data.url, "_blank", "noopener,noreferrer");
+        if (!win) {
+          console.warn("Popup bloqueado, redirecionando na mesma aba");
+          window.location.href = data.url;
+        }
       } else {
         console.error("❌ URL não recebida. Data:", data);
         throw new Error('URL de checkout não foi retornada pela função');

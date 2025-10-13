@@ -112,6 +112,9 @@ const Header = () => {
           </Button>
 
           {/* User Account */}
+          {user && (
+            <Badge variant="secondary" className="hidden sm:inline-flex">Logado</Badge>
+          )}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

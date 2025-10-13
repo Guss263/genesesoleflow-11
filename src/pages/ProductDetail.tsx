@@ -10,7 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
+import { getAllProducts } from "@/data/products";
 interface ProductData {
   id: string;
   name: string;
@@ -41,9 +41,35 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
-      
       setLoading(true);
+
       try {
+        // Se o ID não for UUID, tente buscar nos produtos locais (páginas estáticas)
+        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(id);
+        if (!isUUID) {
+          const local = getAllProducts().find(p => p.id === id);
+          if (local) {
+            setProduct({
+              id: local.id,
+              name: local.name,
+              brand: local.brand,
+              price: local.price,
+              original_price: local.originalPrice,
+              image_url: typeof local.image === 'string' ? local.image : "/placeholder.svg",
+              rating: local.rating,
+              is_new: local.isNew,
+              is_sale: local.isSale,
+              description: local.description,
+              sizes: undefined,
+              category: local.category,
+              gender: local.gender,
+            });
+          } else {
+            setProduct(null);
+          }
+          return;
+        }
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -55,7 +81,6 @@ const ProductDetail = () => {
           setProduct(null);
           return;
         }
-        
         setProduct(data);
       } catch (error) {
         console.error('Error:', error);
