@@ -109,14 +109,21 @@ const ProductCard = ({
           </div>
 
           {/* Wishlist Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`absolute top-3 right-3 bg-background/80 hover:bg-background ${isWishlisted ? 'text-destructive' : ''}`}
+          <button
             onClick={handleWishlistToggle}
+            className={`absolute top-3 right-3 z-10 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
+              isWishlisted 
+                ? "bg-red-500 hover:bg-red-600 scale-110" 
+                : "bg-white/95 dark:bg-gray-800/95 hover:bg-red-50 dark:hover:bg-gray-700"
+            }`}
+            aria-label={isWishlisted ? "Remover da lista de desejos" : "Adicionar à lista de desejos"}
           >
-            <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
-          </Button>
+            <Heart
+              className={`h-5 w-5 transition-all ${
+                isWishlisted ? "fill-white text-white" : "text-red-500"
+              }`}
+            />
+          </button>
 
           {/* Quick View Details */}
           <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

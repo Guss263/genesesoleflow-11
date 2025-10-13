@@ -30,7 +30,7 @@ serve(async (req) => {
       throw new Error("Body da requisição inválido");
     }
     
-    const { items, total } = body;
+    const { items, total, paymentMethod } = body;
     
     // Valida items
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -125,12 +125,22 @@ serve(async (req) => {
     console.log("Criando sessão Stripe Checkout...");
     const origin = req.headers.get("origin") || "https://59fa342c-e162-4a36-8b42-90a2f90e2df0.lovableproject.com";
     
+    // Define métodos de pagamento baseado na seleção do usuário
+    let paymentMethodTypes: string[] = ["card"];
+    if (paymentMethod === 'pix') {
+      paymentMethodTypes = ["pix"];
+    } else if (paymentMethod === 'boleto') {
+      paymentMethodTypes = ["boleto"];
+    }
+    
+    console.log("Métodos de pagamento:", paymentMethodTypes);
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: lineItems,
       mode: "payment",
-      payment_method_types: ["card", "boleto", "pix"],
+      payment_method_types: paymentMethodTypes,
       success_url: `${origin}/order-tracking?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cart`,
       metadata: {
