@@ -29,6 +29,13 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CategoryPage from "./pages/CategoryPage";
 import OrderTracking from "./pages/OrderTracking";
 import SearchResults from "./pages/SearchResults";
+import Help from "./pages/Help";
+import Returns from "./pages/Returns";
+import SizeGuide from "./pages/SizeGuide";
+import Shipping from "./pages/Shipping";
+import Warranty from "./pages/Warranty";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +71,13 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/categoria/:category" element={<CategoryPage />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/returns" element={<Returns />} />
+            <Route path="/size-guide" element={<SizeGuide />} />
+            <Route path="/shipping" element={<Shipping />} />
+            <Route path="/warranty" element={<Warranty />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

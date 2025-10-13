@@ -22,19 +22,19 @@ const Footer = () => {
     title: "Atendimento",
     links: [{
       label: "Central de Ajuda",
-      href: "#"
+      href: "/help"
     }, {
       label: "Trocas e Devoluções",
-      href: "#"
+      href: "/returns"
     }, {
       label: "Guia de Tamanhos",
-      href: "#"
+      href: "/size-guide"
     }, {
       label: "Frete Grátis",
-      href: "#"
+      href: "/shipping"
     }, {
       label: "Garantia",
-      href: "#"
+      href: "/warranty"
     }]
   }, {
     title: "Empresa",
@@ -131,10 +131,10 @@ const Footer = () => {
 
             {/* Legal Links */}
             <div className="flex gap-6 text-sm">
-              <a href="#" className="text-background/60 hover:text-primary transition-colors">
+              <a href="/privacy-policy" className="text-background/60 hover:text-primary transition-colors">
                 Política de Privacidade
               </a>
-              <a href="#" className="text-background/60 hover:text-primary transition-colors">
+              <a href="/terms-of-service" className="text-background/60 hover:text-primary transition-colors">
                 Termos de Uso
               </a>
             </div>
