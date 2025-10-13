@@ -57,6 +57,7 @@ const HeroSection = () => {
             <img
               src={heroSneaker}
               alt="Tênis Premium GêneseFlow"
+              fetchPriority="high"
               className="w-full h-auto relative z-10 transform hover:scale-105 transition-transform duration-500"
             />
           </div>
