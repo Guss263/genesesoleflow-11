@@ -210,9 +210,11 @@ const Payment = () => {
                     </div>
                   </div>
                   <ul className="text-sm text-muted-foreground space-y-1 ml-9">
-                    <li>• Aceita cartões de crédito e débito</li>
+                    <li>• <strong>PIX:</strong> Pagamento instantâneo com QR Code</li>
+                    <li>• <strong>Cartão de Crédito/Débito:</strong> Parcelamento disponível</li>
+                    <li>• <strong>Boleto Bancário:</strong> Vencimento em até 3 dias úteis</li>
                     <li>• Pagamento 100% seguro e criptografado</li>
-                    <li>• Confirmação imediata</li>
+                    <li>• Confirmação imediata por email</li>
                   </ul>
                 </div>
 
@@ -223,7 +225,7 @@ const Payment = () => {
                     disabled={isLoading || items.length === 0}
                     className="hero-button flex-1"
                   >
-                    {isLoading ? 'Processando...' : 'Pagar com Stripe'}
+                    {isLoading ? 'Processando...' : 'Ir para Pagamento'}
                   </Button>
                   
                   <Button
