@@ -62,10 +62,22 @@ const ProductCard = ({
     
     if (isWishlisted) {
       const success = await removeFromWishlist(id);
-      if (success) setIsWishlisted(false);
+      if (success) {
+        setIsWishlisted(false);
+        toast({
+          title: "Removido dos favoritos",
+          description: `${name} foi removido da sua lista de desejos.`,
+        });
+      }
     } else {
       const success = await addToWishlist(id);
-      if (success) setIsWishlisted(true);
+      if (success) {
+        setIsWishlisted(true);
+        toast({
+          title: "❤️ Adicionado aos favoritos!",
+          description: `${name} foi adicionado à sua lista de desejos.`,
+        });
+      }
     }
   };
   const formatPrice = (value: number) => {
@@ -113,7 +125,7 @@ const ProductCard = ({
             onClick={handleWishlistToggle}
             className={`absolute top-3 right-3 z-10 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
               isWishlisted 
-                ? "bg-red-500 hover:bg-red-600 scale-110" 
+                ? "bg-red-600 hover:bg-red-700 scale-110 shadow-red-500/50 animate-pulse-once" 
                 : "bg-white/95 dark:bg-gray-800/95 hover:bg-red-50 dark:hover:bg-gray-700"
             }`}
             aria-label={isWishlisted ? "Remover da lista de desejos" : "Adicionar à lista de desejos"}

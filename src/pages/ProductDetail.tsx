@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/hooks/useWishlist";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getAllProducts } from "@/data/products";
+import { ImageMagnifier } from "@/components/ImageMagnifier";
 interface ProductData {
   id: string;
   name: string;
@@ -31,12 +33,20 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setIsWishlisted(isInWishlist(id));
+    }
+  }, [id, isInWishlist]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -191,15 +201,15 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
-            {/* Product Images */}
+            {/* Product Images with Zoom */}
             <div className="space-y-4">
-              <div className="aspect-square overflow-hidden rounded-lg border">
-                <img
-                  src={product.image_url || "/placeholder.svg"}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
+              <ImageMagnifier
+                src={product.image_url || "/placeholder.svg"}
+                alt={product.name}
+                magnifierHeight={200}
+                magnifierWidth={200}
+                zoomLevel={3}
+              />
             </div>
           </div>
 
@@ -306,9 +316,43 @@ const ProductDetail = () => {
                 </Button>
                 
                 <div className="flex gap-4">
-                  <Button variant="outline" className="flex-1">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Favoritar
+                  <Button 
+                    variant="outline" 
+                    className={`flex-1 transition-all duration-300 ${
+                      isWishlisted 
+                        ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' 
+                        : ''
+                    }`}
+                    onClick={async () => {
+                      if (!product) return;
+                      
+                      if (isWishlisted) {
+                        const success = await removeFromWishlist(product.id);
+                        if (success) {
+                          setIsWishlisted(false);
+                          toast({
+                            title: "Removido dos favoritos",
+                            description: `${product.name} foi removido da sua lista de desejos.`,
+                          });
+                        }
+                      } else {
+                        const success = await addToWishlist(product.id);
+                        if (success) {
+                          setIsWishlisted(true);
+                          toast({
+                            title: "❤️ Adicionado aos favoritos!",
+                            description: `${product.name} foi adicionado à sua lista de desejos.`,
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <Heart 
+                      className={`h-4 w-4 mr-2 transition-all ${
+                        isWishlisted ? 'fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400' : ''
+                      }`}
+                    />
+                    {isWishlisted ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
                   </Button>
                 </div>
               </div>
