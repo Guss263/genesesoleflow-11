@@ -126,12 +126,12 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://59fa342c-e162-4a36-8b42-90a2f90e2df0.lovableproject.com";
     
     // Define métodos de pagamento baseado na seleção do usuário
+    // Nota: PIX não está disponível na conta Stripe de teste atual
     let paymentMethodTypes: string[] = ["card"];
-    if (paymentMethod === 'pix') {
-      paymentMethodTypes = ["pix"];
-    } else if (paymentMethod === 'boleto') {
+    if (paymentMethod === 'boleto') {
       paymentMethodTypes = ["boleto"];
     }
+    // PIX removido temporariamente - requer ativação no dashboard Stripe
     
     console.log("Métodos de pagamento:", paymentMethodTypes);
     
@@ -146,6 +146,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
       },
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutos
     });
 
     console.log("✓ Sessão criada com sucesso!");

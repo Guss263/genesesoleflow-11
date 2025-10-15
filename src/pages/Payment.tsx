@@ -13,7 +13,7 @@ const Payment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix' | 'boleto'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'boleto'>('card');
   const { items, total, clearCart } = useCart();
 
   const handleStripeCheckout = async () => {
@@ -206,7 +206,7 @@ const Payment = () => {
                     Escolha a Forma de Pagamento
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <button
                       onClick={() => setPaymentMethod('card')}
                       className={`p-4 rounded-lg border-2 transition-all ${
@@ -218,19 +218,6 @@ const Payment = () => {
                       <CreditCard className="h-8 w-8 mx-auto mb-2 text-primary" />
                       <p className="font-semibold text-foreground">Cartão</p>
                       <p className="text-xs text-muted-foreground mt-1">Crédito ou Débito</p>
-                    </button>
-
-                    <button
-                      onClick={() => setPaymentMethod('pix')}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        paymentMethod === 'pix'
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border bg-accent/50 hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="h-8 w-8 mx-auto mb-2 text-primary font-bold text-xl">PIX</div>
-                      <p className="font-semibold text-foreground">PIX</p>
-                      <p className="text-xs text-muted-foreground mt-1">Instantâneo</p>
                     </button>
 
                     <button
@@ -252,17 +239,17 @@ const Payment = () => {
                     </button>
                   </div>
 
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm">
+                    <p className="text-yellow-800 dark:text-yellow-200">
+                      ℹ️ <strong>PIX temporariamente indisponível.</strong> Este método de pagamento precisa ser ativado no painel Stripe.
+                    </p>
+                  </div>
+
                   <div className="bg-accent rounded-lg p-4 text-sm text-muted-foreground">
                     {paymentMethod === 'card' && (
                       <>
                         <strong className="text-foreground">Cartão de Crédito/Débito:</strong>
                         <p className="mt-1">• Parcelamento disponível • Confirmação imediata</p>
-                      </>
-                    )}
-                    {paymentMethod === 'pix' && (
-                      <>
-                        <strong className="text-foreground">PIX:</strong>
-                        <p className="mt-1">• QR Code gerado na próxima tela • Confirmação instantânea</p>
                       </>
                     )}
                     {paymentMethod === 'boleto' && (
