@@ -20,13 +20,10 @@ const Payment = () => {
     setIsLoading(true);
 
     try {
-      console.log("=== INICIANDO CHECKOUT STRIPE ===");
-      
       // Verifica autenticação
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.error("❌ Usuário não autenticado");
         toast({
           title: "Erro",
           description: "Você precisa estar logado para finalizar a compra.",
@@ -36,11 +33,8 @@ const Payment = () => {
         return;
       }
 
-      console.log("✓ Usuário autenticado:", user.email);
-
       // Verifica carrinho
       if (!items || items.length === 0) {
-        console.error("❌ Carrinho vazio");
         toast({
           title: "Carrinho vazio",
           description: "Adicione produtos ao carrinho antes de continuar.",
@@ -50,12 +44,9 @@ const Payment = () => {
         return;
       }
 
-      console.log(`✓ Carrinho com ${items.length} itens | Total: R$ ${total.toFixed(2)}`);
-
       // Cria pedido no banco de dados
       const orderNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      console.log("Criando pedido no banco...");
       const { error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -67,15 +58,10 @@ const Payment = () => {
         });
 
       if (orderError) {
-        console.error("❌ Erro ao criar pedido:", orderError);
         throw new Error(`Erro ao criar pedido: ${orderError.message}`);
       }
 
-      console.log("✓ Pedido criado:", orderNumber);
-
       // Chama função Stripe checkout
-      console.log("Chamando edge function create-checkout...");
-      
       const payload = {
         items: items.map(item => ({
           name: item.name,
@@ -90,41 +76,25 @@ const Payment = () => {
         paymentMethod: paymentMethod,
       };
       
-      console.log("Payload:", JSON.stringify(payload, null, 2));
-      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: payload,
       });
 
-      console.log("Resposta recebida:");
-      console.log("- Data:", data);
-      console.log("- Error:", error);
-
       if (error) {
-        console.error("❌ Erro da edge function:", error);
         throw new Error(error.message || "Erro ao criar sessão de checkout");
       }
 
       if (data?.url) {
-        console.log("✓ URL de checkout recebida!");
-        console.log("Limpando carrinho...");
         clearCart();
         
-        console.log("Abrindo Stripe em nova aba...");
         const win = window.open(data.url, "_blank", "noopener,noreferrer");
         if (!win) {
-          console.warn("Popup bloqueado, redirecionando na mesma aba");
           window.location.href = data.url;
         }
       } else {
-        console.error("❌ URL não recebida. Data:", data);
         throw new Error('URL de checkout não foi retornada pela função');
       }
     } catch (error) {
-      console.error('❌ ERRO COMPLETO:', error);
-      console.error('Tipo:', typeof error);
-      console.error('Message:', error instanceof Error ? error.message : String(error));
-      
       toast({
         title: "Erro ao processar pagamento",
         description: error instanceof Error ? error.message : "Erro desconhecido. Tente novamente.",
@@ -132,7 +102,6 @@ const Payment = () => {
       });
     } finally {
       setIsLoading(false);
-      console.log("=== FIM DO CHECKOUT ===");
     }
   };
 
